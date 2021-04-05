@@ -1,4 +1,5 @@
 import Flickr from "flickr-sdk";
+import type { FlickrPhoto, Photo } from ".";
 
 const sizes = {
   sq: "sq_75px",
@@ -16,8 +17,8 @@ const sizes = {
 // Stolen and modified from the original gatsby-source-flickt plugin (https://github.com/chrissearle/gatsby-source-flickr)
 
 // The flickr API has some issues when put into GraphQL - create a suitable version
-const fixPhoto = (photo: any) => {
-  const fixed = photo;
+const fixPhoto = (photo: FlickrPhoto): Photo => {
+  const fixed: any = photo;
 
   // Don't name crash with node.id
   fixed.photo_id = fixed.id;
@@ -59,10 +60,12 @@ const fixPhoto = (photo: any) => {
   // Convert Date versions of dateupload and lastupdate
 
   if (Object.prototype.hasOwnProperty.call(fixed, "dateupload")) {
-    fixed.dateupload_date = new Date(fixed.dateupload * 1000);
+    fixed.upload_date = new Date(fixed.dateupload * 1000);
+    delete fixed.dateupload;
   }
   if (Object.prototype.hasOwnProperty.call(fixed, "lastupdate")) {
     fixed.lastupdate_date = new Date(fixed.lastupdate * 1000);
+    delete fixed.lastupdate;
   }
 
   // Simplify the structure of the description to just a string
@@ -94,14 +97,8 @@ const fixPhoto = (photo: any) => {
   ];
 
   for (const property in fixed) {
-    const lastElem = property
-      .toString()
-      .split("_")
-      .pop();
-    const firstElem = property
-      .toString()
-      .split("_")
-      .shift();
+    const lastElem = property.toString().split("_").pop();
+    const firstElem = property.toString().split("_").shift();
 
     if (firstElem && lastElem && Object.keys(sizes).includes(lastElem)) {
       const sizeKey = sizes[lastElem];
@@ -129,9 +126,13 @@ const fixPhoto = (photo: any) => {
 
   delete fixed.server;
   delete fixed.farm;
+  delete fixed.iconserver;
+  delete fixed.iconfarm;
   delete fixed.ispublic;
   delete fixed.isfriend;
   delete fixed.isfamily;
+  delete fixed.owner;
+  delete fixed.pathalias;
 
   return fixed;
 };
@@ -141,9 +142,7 @@ const pluginOptionsSchema = ({ Joi }) => {
     // Validate that the anonymize option is defined by the user and is a boolean
     api_key: Joi.string().required(),
     username: Joi.string().required(),
-    extras: Joi.array()
-      .items(Joi.string())
-      .optional(),
+    extras: Joi.array().items(Joi.string()).optional(),
   });
 };
 
@@ -187,11 +186,11 @@ const sourceNodes = async (
   };
 
   // Generator will iterate over paged responses until done
-  async function* getPhotos() {
+  async function* getPhotos(username: string, extras: string) {
     let page = 0;
     let isLast = false;
 
-    const userId = await getUserId(FLICKR_USER);
+    const userId = await getUserId(username);
 
     while (!isLast) {
       try {
@@ -218,8 +217,8 @@ const sourceNodes = async (
   // Use the generator to build an array of photo data
 
   async function flickrPhotos() {
-    const photoGenerator = await getPhotos();
-    let photos: any[] = [];
+    const photoGenerator = await getPhotos(FLICKR_USER, extras);
+    let photos: FlickrPhoto[] = [];
 
     for await (const iter of photoGenerator) {
       photos = [...photos, ...iter.photo];
@@ -237,7 +236,7 @@ const sourceNodes = async (
   // loop through data and create Gatsby nodes
   photos.forEach((item) => {
     // Fix up the data (it's complicated...)
-    const photo = fixPhoto(item);
+    const photo: Photo = fixPhoto(item);
 
     return createNode({
       ...photo,
