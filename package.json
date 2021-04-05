@@ -1,6 +1,6 @@
 {
   "name": "@davepwsmith/gatsby-source-flickr",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A source plugin to retrieve photos from flickr",
   "author": "David Smith",
   "repository": "https://github.com/davepwsmith/gatsby-source-flickr.git",

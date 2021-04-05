@@ -35,17 +35,17 @@ The plugin uses the `people.getPublicPhotos` endpoint, and will add sane, restra
 
 The `api_key` and `username` options are required.
 
-If you want to add any other "extras" to this from the API above, you can include them in an array on the extras key (example below). NB -
+If you want to add any other "extras" to this from the API above, you can include them in an array on the extras key (example below).
 
 ### Example Configuration
 
-This would retrieve all photos for a given user id.
+This would retrieve all photos for a given user id, and include location data.
 
 ```js
 module.exports = {
   plugins: [
     {
-      resolve: "gatsby-source-flickr",
+      resolve: "@davepwsmith/gatsby-source-flickr",
       options: {
         api_key: process.env.FLICKR_API_KEY,
         username: process.env.FLICKR_USER,
