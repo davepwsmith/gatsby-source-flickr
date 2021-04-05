@@ -6,7 +6,7 @@ This source plugin for Gatsby will make images from [Flickr](https://flickr.com/
 
 ```sh
 # Install the plugin
-yarn add gatsby-source-flickr
+npm install @davepwsmith/gatsby-source-flickr
 ```
 
 In `gatsby-config.js`:
@@ -15,7 +15,7 @@ In `gatsby-config.js`:
 module.exports = {
   plugins: [
     {
-      resolve: "gatsby-source-flickr",
+      resolve: "@davepwsmith/gatsby-source-flickr",
       options: {
         api_key: "YOUR_FLICKR_API_KEY",
         username: "YOUR_FLICKR_USERNAME",
@@ -29,13 +29,13 @@ module.exports = {
 
 ## Configuration Options
 
-The plugin uses the people.getPublicPhotos endpoint, and will add sane, restrained defaults.
+The plugin uses the `people.getPublicPhotos` endpoint, and will add sane, restrained defaults.
 
 - [Flickr API call options](https://www.flickr.com/services/api/flickr.people.getPublicPhotos.html).
 
 The `api_key` and `username` options are required.
 
-If you want to add any other "extras" to this from the API above, you can include them in an array on the extras key (example below)
+If you want to add any other "extras" to this from the API above, you can include them in an array on the extras key (example below). NB -
 
 ### Example Configuration
 
@@ -60,7 +60,14 @@ module.exports = {
 
 Once the plugin is configured, two new queries are available in GraphQL: `allFlickrPhoto` and `flickrPhoto`.
 
-Here’s an example query to load 10 images:
+The nodes will have the following fields by default:
+
+id
+title
+description
+imageUrls - which contains an entry for each available size (e.g. \_1024px)
+
+Here’s an example query to load 10 images in several sizes:
 
 ```gql
 query PhotoQuery {
@@ -73,15 +80,23 @@ query PhotoQuery {
         imageUrls {
         _1024px {
           url
+          height
+          width
         }
         _500px {
           url
+          height
+          width
         }
         sq_150px {
           url
+          height
+          width
         }
         _320px {
           url
+          height
+          width
         }
       }
       }
