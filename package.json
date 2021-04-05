@@ -15,17 +15,16 @@
     "build": "tsc",
     "prepare": "cross-env NODE_ENV=production npm run build",
     "lint": "eslint ./src --ext .ts,.tsx",
-    "lint:fix": "eslint ./src --ext .ts,.tsx --fix",    
+    "lint:fix": "eslint ./src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.ts\""
   },
   "dependencies": {
     "flickr-sdk": "^3.10.0"
   },
   "devDependencies": {
-    "@types/joi": "^17.2.3",
     "@types/node": "^14.14.37",
-    "@typescript-eslint/eslint-plugin": "^4.19.0",
-    "@typescript-eslint/parser": "^4.19.0",
+    "@typescript-eslint/eslint-plugin": "^4.21.0",
+    "@typescript-eslint/parser": "^4.21.0",
     "cross-env": "^7.0.3",
     "eslint": "^7.23.0",
     "prettier": "^2.2.1",
