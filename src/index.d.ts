@@ -63,13 +63,14 @@ type Description = {
   _content: string | null;
 };
 
-type ImageUrl = {
+export type ImageUrl = {
   url: string;
   height: number;
   width: number;
+  orientation: "landscape" | "portrait" | "square";
 };
 
-type ImageUrls = {
+export type ImageUrls = {
   sq_75px: ImageUrl;
   sq_150px: ImageUrl;
   _100px: ImageUrl;

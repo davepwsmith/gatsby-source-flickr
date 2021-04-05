@@ -1,5 +1,5 @@
 import Flickr from "flickr-sdk";
-import type { FlickrPhoto, Photo } from ".";
+import type { FlickrPhoto, ImageUrl, Photo } from ".";
 
 const sizes = {
   sq: "sq_75px",
@@ -38,14 +38,17 @@ const fixPhoto = (photo: FlickrPhoto): Photo => {
   if (Object.prototype.hasOwnProperty.call(fixed, "accuracy")) {
     fixed.accuracy = parseInt(fixed.accuracy);
   }
+  if (Object.prototype.hasOwnProperty.call(fixed, "context")) {
+    fixed.context = parseInt(fixed.context);
+  }
 
-  // A missing latitude or longitude can come down as either 0 or "0" - force to string
+  // A missing latitude or longitude can come down as either 0 or "0" - force to number
 
   if (Object.prototype.hasOwnProperty.call(fixed, "latitude")) {
-    fixed.latitude = "" + fixed.latitude;
+    fixed.latitude = parseFloat(fixed.latitude);
   }
   if (Object.prototype.hasOwnProperty.call(fixed, "longitude")) {
-    fixed.longitude = "" + fixed.longitude;
+    fixed.longitude = parseFloat(fixed.longitude);
   }
 
   // These can come down as either string or number. Have only ever seen "0" and 0 here - and documentation is sparse - remove them
@@ -110,6 +113,21 @@ const fixPhoto = (photo: FlickrPhoto): Photo => {
       delete fixed[property];
     }
 
+    // Add orientation
+
+    for (const image in fixed.imageUrls) {
+      if (Object.prototype.hasOwnProperty.call(fixed.imageUrls, image)) {
+        const element: ImageUrl = fixed.imageUrls[image];
+
+        element.orientation =
+          element.width === element.height
+            ? "square"
+            : element.width > element.height
+            ? "landscape"
+            : "portrait";
+      }
+    }
+
     if (geospatial.includes(property)) {
       if (firstElem && firstElem === "geo") {
         fixed.geo.permissions[property.toString().substring(4)] =
@@ -121,8 +139,13 @@ const fixPhoto = (photo: FlickrPhoto): Photo => {
     }
   }
 
-  // delete some useless info (we use getPublicPhotos so we already know
-  // photos are public and we have URLs for the photos in the response)
+  // delete some useless info:
+  // * we use getPublicPhotos so we already know photos
+  // are public and we have URLs for the photos in the response)
+  // * various server/farm references seem pointless when you have URLs
+  // * owner/username are stipuated in the plugin settings - might bring
+  // these back if functionality is added to get photos from different places
+  // * secret... not sure what these are for!
 
   delete fixed.server;
   delete fixed.farm;
@@ -132,7 +155,7 @@ const fixPhoto = (photo: FlickrPhoto): Photo => {
   delete fixed.isfriend;
   delete fixed.isfamily;
   delete fixed.owner;
-  delete fixed.pathalias;
+  delete fixed.secret;
 
   return fixed;
 };
