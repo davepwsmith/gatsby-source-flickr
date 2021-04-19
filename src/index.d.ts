@@ -54,6 +54,12 @@ export type FlickrPhoto = {
   url_l?: string | null;
   height_l?: string | null;
   width_l?: string | null;
+  url_h?: string | null;
+  height_h?: string | null;
+  width_h?: string | null;
+  url_k?: string | null;
+  height_k?: string | null;
+  width_k?: string | null;
   pathalias?: string | null;
   woeid?: number | string | null;
   placeid?: string | null;
@@ -80,6 +86,8 @@ export type ImageUrls = {
   _640px: ImageUrl;
   _800px: ImageUrl;
   _1024px: ImageUrl;
+  _1600px: ImageUrl;
+  _2048px: ImageUrl;
   original: ImageUrl;
 };
 

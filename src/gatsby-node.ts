@@ -11,6 +11,8 @@ const sizes = {
   z: "_640px",
   c: "_800px",
   l: "_1024px",
+  h: "_1600px",
+  k: "_2048px",
   o: "original",
 };
 
