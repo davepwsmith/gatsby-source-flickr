@@ -207,6 +207,7 @@ const sourceNodes = async (
       return userId;
     } catch (error) {
       console.warn("Error: ", error);
+      return error
     }
   };
 

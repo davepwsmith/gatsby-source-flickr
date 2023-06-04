@@ -1,3 +1,4 @@
 node_modules
 dist
-/gatsby-node.js
+gatsby-node.js
+.env*

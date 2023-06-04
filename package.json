@@ -1,37 +1,13 @@
 {
-  "name": "@davepwsmith/gatsby-source-flickr",
-  "version": "1.2.0",
-  "description": "A source plugin to retrieve photos from flickr",
-  "author": "David Smith",
-  "repository": "https://github.com/davepwsmith/gatsby-source-flickr.git",
-  "keywords": [
-    "gatsby",
-    "gatsby-plugin",
-    "gatsby-source-plugin",
-    "flickr",
-    "photos"
+  "name": "gatsby-source-flickr-workspace",
+  "private":true,
+  "workspaces": [
+    "plugin",
+    "site"
   ],
-  "license": "MIT",
   "scripts": {
-    "build": "tsc",
-    "prepare": "cross-env NODE_ENV=production npm run build",
-    "lint": "eslint ./src --ext .ts,.tsx",
-    "lint:fix": "eslint ./src --ext .ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.ts\""
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "dependencies": {
-    "flickr-sdk": "^3.10.0"
-  },
-  "devDependencies": {
-    "@types/node": "^14.14.37",
-    "@typescript-eslint/eslint-plugin": "^4.21.0",
-    "@typescript-eslint/parser": "^4.21.0",
-    "cross-env": "^7.0.3",
-    "eslint": "^7.23.0",
-    "prettier": "^2.2.1",
-    "typescript": "^4.2.3"
-  },
-  "peerDependencies": {
-    "gatsby": ">3.0.0"
-  }
+  "author": "",
+  "license": "ISC"
 }
