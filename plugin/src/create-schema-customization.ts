@@ -1,9 +1,11 @@
-import type { GatsbyNode } from 'gatsby'
+import type { GatsbyNode } from "gatsby";
 
-export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] = ({actions}) => {
-    const { createTypes } = actions
+export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] = ({
+  actions,
+}) => {
+  const { createTypes } = actions;
 
-    createTypes(`
+  createTypes(`
         type FlickrPhoto implements Node {
             _id: String!
             title: String!
@@ -19,5 +21,5 @@ export const createSchemaCustomization: GatsbyNode['createSchemaCustomization'] 
             orientation: String!
             url: String!
         }
-    `)
-}
+    `);
+};
