@@ -1,10 +1,10 @@
 import Flickr from "flickr-sdk";
-import { fixPhoto } from "./fixflickr";
+import { buildFlickrPhotoNode } from "./node-builder";
 
 import { GatsbyNode } from "gatsby";
 
-import { FlickrPhoto, IPluginOptionsInternal, Photo } from "./types";
-import { sizes, PHOTO_NODE_TYPE } from "./constants";
+import { FlickrPhoto, IPluginOptionsInternal } from "./types";
+import { THUMBS, SIZES, PHOTO_NODE_TYPE } from "./constants";
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   gatsbyApi,
@@ -22,15 +22,14 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
 
   // Some defaults...
   const extras_string = "description, date_taken,";
-
+  const all_sizes = [...THUMBS, ...SIZES]
+  
   // Expand all the sizes we want to retrieve
-  let size_extras = "";
-  for (const size in sizes) {
-    size_extras += `height_${size}, width_${size}, url_${size},`;
-  }
+  const size_extras: string = all_sizes.map(size => `height_${size}, width_${size}, url_${size}`).join()
+
 
   // Construct string of extra params for flickr API
-  const extras: string = size_extras + extras_string + EXTRAS.join();
+  const extras = size_extras + extras_string + EXTRAS.join();
   // Instantiate flickr sdk
   const flickr = new Flickr(FLICKR_API_KEY);
 
@@ -94,11 +93,10 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   // loop through data and create Gatsby nodes
   photos.forEach((item) => {
     // Fix up the data (it's complicated...)
-    const photo: Photo = fixPhoto(item);
+    const photo = buildFlickrPhotoNode(item);
 
     return createNode({
       ...photo,
-      extras: extras,
       id: createNodeId(`${PHOTO_NODE_TYPE}-${photo._id}`),
       parent: null,
       children: [],

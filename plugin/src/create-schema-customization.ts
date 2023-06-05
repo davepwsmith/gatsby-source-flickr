@@ -5,21 +5,55 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
 }) => {
   const { createTypes } = actions;
 
-  createTypes(`
-        type FlickrPhoto implements Node {
-            _id: String!
-            title: String!
-            description: String
-            datetaken: Date
-            imageUrls: [ImageUrl]
-        } 
+  const typedefs = `
 
-        type ImageUrl {
-            alt: String
-            height: Int!
-            width: Int!
-            orientation: String!
-            url: String!
-        }
-    `);
+    union StringNum = String | Float
+
+    type FlickrPhoto implements Node {
+      _id: String!
+      owner: String!
+      ownerName: String
+      title: String!
+      license: String
+      description: String
+      upload_date: Date
+      lastupdate_date: Date
+      datetaken: Date
+      views: Int
+      tags: String
+      machine_tags: String
+      geo: Geo
+      media: String
+      media_status: String
+      imageUrls: [ImageUrl]
+      thumbnailUrls: [ImageUrl]
+    } 
+
+    type GeoPermissions {
+      is_public: Int
+      is_friend: Int
+      is_family: Int
+      is_contact: Int
+    }
+
+    type Geo {
+      permissions: GeoPermissions,
+      latitude: Float
+      longitude: Float
+      accuracy: Float
+      context: Float
+      woeid: StringNum
+      placeid: StringNum
+    }
+
+    type ImageUrl {
+      label: String
+      height: Int!
+      width: Int!
+      orientation: String!
+      url: String!
+    }
+  `
+
+  createTypes(typedefs);
 };

@@ -95,8 +95,8 @@ export type Geo = {
   longitude?: number | null;
   accuracy?: number | null;
   context?: number | null;
-  woeid: number | string | null;
-  placeid: number | string | null;
+  woeid?: number | string | null;
+  placeid?: number | string | null;
 };
 
 export type Photo = {

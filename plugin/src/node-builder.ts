@@ -68,7 +68,7 @@ const getGeoDetails = (flickrPhoto: FlickrPhoto): Geo => {
   return geo;
 };
 
-export const fixPhoto = (flickrPhoto: FlickrPhoto): Photo => {
+export const buildFlickrPhotoNode = (flickrPhoto: FlickrPhoto): Photo => {
   const photo: Photo = {
     _id: flickrPhoto.id,
     owner: flickrPhoto.owner,
