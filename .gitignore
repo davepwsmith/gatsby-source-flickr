@@ -2,3 +2,6 @@ node_modules
 dist
 gatsby-node.js
 .env*
+gatsby-types.d.ts
+public
+.cache
