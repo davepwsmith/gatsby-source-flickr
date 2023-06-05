@@ -1,9 +1,18 @@
-import { IGatsbyImageData, IGetImageDataArgs } from "gatsby-plugin-image";
+import { IGatsbyImageData } from "gatsby-plugin-image";
 import { getGatsbyImageResolver } from "gatsby-plugin-image/graphql-utils";
 
 import type { ImageUrls, Photo } from "./types";
 import { IResponsiveImageProps } from "gatsby-plugin-image/dist/src/components/picture";
 import { GatsbyNode } from "gatsby";
+
+// TODO: Work out why images are being expanded to a size greater than their pixel size when 
+// some sizes are stipulated in graphql (e.g. width: 300, height: 300 renders 213x319px image)
+
+// TODO: Work out whether this could be done 'properly' using the generateImageData etc. bits.
+// This would mean that we could theoretically pass intrinsic and stipulated sizes, allow for ratios, etc. 
+
+// TODO: Work out a good way for a user to request a square image for display in grid (could be
+// as simple as fixing the width+height issue above and documenting that as the best way)
 
 interface IImageFilter {
   images: ImageUrls;
@@ -12,6 +21,14 @@ interface IImageFilter {
   maxHeight: number;
 }
 
+/**
+ * A function to remove any images which are larger than required, and return default values 
+ * for the image `src` and max width/height
+ * @param imageUrls A list of imageUrl objects retrieved from a flickrPhoto
+ * @param width the width required, if specified
+ * @param height the height required, if specified
+ * @returns An object with a filtered list of images, max height and width, and fallback url
+ */
 const filterImages = (
   imageUrls: ImageUrls,
   width?: number,
@@ -45,6 +62,12 @@ const filterImages = (
   };
 };
 
+/**
+ * A function that returns srcSet and sizes parameters for use in responsive images
+ * @param images A list of images as @type ImageUrl objects
+ * @param maxWidth The maximum width of image to display
+ * @returns an obect containing srcSet and sizes strings
+ */
 const generateSrcSets = (images, maxWidth): IResponsiveImageProps => {
   // Generate appropriate srcSet and sizes properties for the max width specified
   const srcSet = images.map((x) => `${x.url} ${x.width}w`).join();
@@ -61,8 +84,15 @@ const generateSrcSets = (images, maxWidth): IResponsiveImageProps => {
   return image;
 };
 
+
+/**
+ * A function to generate dataUrl thumbnails for flickr images
+ * @param thumbs A list of thumbnails as ImageUrl objects
+ * @returns A base64 encoded dataUrl of the smallest possible thumbnail
+ *          for blur-ups
+ */
 const getThumbnail = async (thumbs: ImageUrls) => {
-  // Generate a base64 thumbnail from the smallest
+  // Generate a base64 thumbnail from the smallest image available
   const thumb = thumbs.find((x) => x.label == "t");
   if (thumb && thumb.url) {
     const { url } = thumb;
@@ -77,10 +107,18 @@ const getThumbnail = async (thumbs: ImageUrls) => {
   }
 };
 
+
+/**
+ * A function to resolve flickr images into gatsbyImageData-shaped objects
+ * @param image an image node passed by gatsbyjs
+ * @param options additional options passed by the user
+ * @returns image data to be returned in graphql and consumed by GatsbyImage elements
+*/
+// TODO: It doesn't seem right that we are taking in IGatsbyImageData and returning the same...
 const resolveGatsbyImageData = async (
   image: Photo,
-  options: IGetImageDataArgs
-) => {
+  options: IGatsbyImageData
+): Promise<IGatsbyImageData> => {
   // The `image` argument is the node to which you are attaching the resolver,
   // so the values will depend on your data type.
   const { width, height, layout } = options;
@@ -100,8 +138,8 @@ const resolveGatsbyImageData = async (
 
   const imageData: IGatsbyImageData = {
     layout: layout ? layout : "constrained",
-    width: maxWidth,
-    height: maxHeight,
+    width: width ? width : maxWidth,
+    height: height ? height : maxHeight,
     placeholder: placeholder,
     images: {
       sources: [

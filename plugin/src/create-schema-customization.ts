@@ -6,9 +6,6 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
   const { createTypes } = actions;
 
   const typedefs = `
-
-    union StringNum = String | Float
-
     type FlickrPhoto implements Node {
       _id: String!
       owner: String!
@@ -42,8 +39,8 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
       longitude: Float
       accuracy: Float
       context: Float
-      woeid: StringNum
-      placeid: StringNum
+      woeid: String
+      placeid: String
     }
 
     type ImageUrl {
