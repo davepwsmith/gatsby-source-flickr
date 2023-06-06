@@ -1,12 +1,12 @@
 import { IGatsbyImageData } from "gatsby-plugin-image";
 import { getGatsbyImageResolver } from "gatsby-plugin-image/graphql-utils";
 
-import type { ImageUrls, Photo } from "./types";
+import type { ImageUrls, Photo, ThumbnailUrls } from "./types";
 import { IResponsiveImageProps } from "gatsby-plugin-image/dist/src/components/picture";
 import { GatsbyNode } from "gatsby";
 
 // TODO: Work out whether this could be done 'properly' using the generateImageData etc. bits.
-// This would mean that we could theoretically pass intrinsic and stipulated sizes, allow for ratios, etc. 
+// This would mean that we could theoretically pass intrinsic and stipulated sizes, allow for ratios, etc.
 
 interface IImageFilter {
   images: ImageUrls;
@@ -16,7 +16,7 @@ interface IImageFilter {
 }
 
 /**
- * A function to remove any images which are larger than required, and return default values 
+ * A function to remove any images which are larger than required, and return default values
  * for the image `src` and max width/height
  * @param imageUrls A list of imageUrl objects retrieved from a flickrPhoto
  * @param width the width required, if specified
@@ -45,13 +45,13 @@ const filterImages = (
   imageUrls.sort((a, b) => a.width - b.width);
 
   //Get index of smallest image which satisfies both height and width image
-  const widest = imageUrls.findIndex(x => x.width === maxWidth)
-  const tallest = imageUrls.findIndex(x => x.height === maxHeight)
-  const idx = Math.max(widest, tallest)
+  const widest = imageUrls.findIndex((x) => x.width === maxWidth);
+  const tallest = imageUrls.findIndex((x) => x.height === maxHeight);
+  const idx = Math.max(widest, tallest);
 
   // Filter images to only include images below the largest size requested in the srcset
-  const filteredImages = imageUrls.slice(0,(idx+1))
-  
+  const filteredImages = imageUrls.slice(0, idx + 1);
+
   // Return largest image in set for fallback
   const largestImage = filteredImages[idx];
 
@@ -85,14 +85,13 @@ const generateSrcSets = (images, maxWidth): IResponsiveImageProps => {
   return image;
 };
 
-
 /**
  * A function to generate dataUrl thumbnails for flickr images
  * @param thumbs A list of thumbnails as ImageUrl objects
  * @returns A base64 encoded dataUrl of the smallest possible thumbnail
  *          for blur-ups
  */
-const getThumbnail = async (thumbs: ImageUrls) => {
+const getThumbnail = async (thumbs: ThumbnailUrls) => {
   // Generate a base64 thumbnail from the smallest image available
   const thumb = thumbs.find((x) => x.label == "t");
   if (thumb && thumb.url) {
@@ -108,13 +107,12 @@ const getThumbnail = async (thumbs: ImageUrls) => {
   }
 };
 
-
 /**
  * A function to resolve flickr images into gatsbyImageData-shaped objects
  * @param image an image node passed by gatsbyjs
  * @param options additional options passed by the user
  * @returns image data to be returned in graphql and consumed by GatsbyImage elements
-*/
+ */
 // TODO: It doesn't seem right that we are taking in IGatsbyImageData and returning the same...
 const resolveGatsbyImageData = async (
   image: Photo,

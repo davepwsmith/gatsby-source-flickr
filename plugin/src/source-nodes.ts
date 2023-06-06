@@ -3,8 +3,12 @@ import { buildFlickrPhotoNode } from "./node-builder";
 
 import { GatsbyNode } from "gatsby";
 
-import { FlickrPhoto, IPluginOptionsInternal } from "./types";
-import { THUMBS, SIZES, PHOTO_NODE_TYPE } from "./constants";
+import {
+  FlickrPeopleGetPublicPhotosResponse,
+  FlickrPhotosLicensesGetInfoResponse,
+  IPluginOptionsInternal,
+} from "./types";
+import { sizes, PHOTO_NODE_TYPE } from "./constants";
 
 export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   gatsbyApi,
@@ -15,23 +19,32 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
 
   const FLICKR_API_KEY: string = pluginOptions.api_key;
   const FLICKR_USER: string = pluginOptions.username;
-  const EXTRAS: Array<string> = pluginOptions.extras;
+  const EXTRAS = pluginOptions.extras;
 
   // Sizes available in flickr API (NB: these are subtly different to the
   // sizes documented in flickr URLs - confusing!)
 
   // Some defaults...
-  const extras_string = "description, date_taken,";
-  const all_sizes = [...THUMBS, ...SIZES]
-  
-  // Expand all the sizes we want to retrieve
-  const size_extras: string = all_sizes.map(size => `height_${size}, width_${size}, url_${size}`).join()
+  const { THUMBS, CROPS, ORIG } = sizes;
+  const all_sizes = [...THUMBS, ...CROPS, ...ORIG];
 
+  // Expand all the sizes we want to retrieve
+  const size_extras: string = all_sizes
+    .map((size) => `height_${size}, width_${size}, url_${size}`)
+    .join();
 
   // Construct string of extra params for flickr API
-  const extras = size_extras + extras_string + EXTRAS.join();
+  const extras = size_extras + EXTRAS.join();
   // Instantiate flickr sdk
   const flickr = new Flickr(FLICKR_API_KEY);
+
+  const getLicenses = async () => {
+    const res_licenses = await flickr.photos.licenses.getInfo({});
+    const body: FlickrPhotosLicensesGetInfoResponse = await res_licenses.body;
+
+    const licenses = body.licenses.license;
+    return licenses;
+  };
 
   // Get user ID from username, which people are more likely to know
   const getUserId = async (username: string) => {
@@ -78,7 +91,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
 
   async function flickrPhotos() {
     const photoGenerator = await getPhotos(FLICKR_USER, extras);
-    let photos: FlickrPhoto[] = [];
+    let photos: FlickrPeopleGetPublicPhotosResponse[] = [];
 
     for await (const iter of photoGenerator) {
       photos = [...photos, ...iter.photo];
@@ -88,12 +101,13 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   }
 
   // Get 'em...
+  const licenses = await getLicenses();
   const photos = await flickrPhotos();
 
   // loop through data and create Gatsby nodes
   photos.forEach((item) => {
     // Fix up the data (it's complicated...)
-    const photo = buildFlickrPhotoNode(item);
+    const photo = buildFlickrPhotoNode(item, licenses);
 
     return createNode({
       ...photo,

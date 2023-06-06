@@ -1,4 +1,5 @@
 import type { GatsbyConfig } from "gatsby"
+import type { IPluginOptions } from "@davepwsmith/gatsby-source-flickr"
 
 import { config } from "dotenv";
 
@@ -21,8 +22,24 @@ const gatsbyConfig: GatsbyConfig = {
       options: {
         api_key: process.env.FLICKR_API_KEY,
         username: process.env.FLICKR_USER,
-        extras: []
-      }
+        extras: [
+          "description",
+          "license",
+          "dateUploaded",
+          "dateTaken",
+          "ownerName",
+          "iconServer",
+          "originalFormat",
+          "dateLastUpdated",
+          "geoData",
+          "tags",
+          "machineTags",
+          "originalDimensions",
+          "views",
+          "media",
+          "pathAlias"
+        ]
+      } satisfies IPluginOptions
     },
     'gatsby-plugin-image',
     'gatsby-transformer-sharp'

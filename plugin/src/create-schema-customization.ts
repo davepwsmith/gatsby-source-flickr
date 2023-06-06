@@ -1,30 +1,35 @@
 import type { GatsbyNode } from "gatsby";
 
-export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] = ({
-  actions,
-}) => {
-  const { createTypes } = actions;
+export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] =
+  ({ actions }) => {
+    const { createTypes } = actions;
 
-  const typedefs = `
+    const typedefs = `
     type FlickrPhoto implements Node {
       _id: String!
       owner: String!
       ownerName: String
       title: String!
-      license: String
+      license: License
       description: String
-      upload_date: Date
-      lastupdate_date: Date
-      datetaken: Date
+      dateUploaded: Date
+      dateLastUpdated: Date
+      dateTaken: Date
       views: Int
-      tags: String
-      machine_tags: String
-      geo: Geo
+      geoData: Geo
+      tags: [String]
+      machineTags: [String]
       media: String
-      media_status: String
-      imageUrls: [ImageUrl]
-      thumbnailUrls: [ImageUrl]
+      pathAlias: String
+      imageUrls: [ImageUrl]!
+      thumbnailUrls: [ImageUrl]!
     } 
+
+    type License {
+      _id: Int!, 
+      name: String!,
+      url: String!
+    }
 
     type GeoPermissions {
       is_public: Int
@@ -50,7 +55,7 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
       orientation: String!
       url: String!
     }
-  `
+  `;
 
-  createTypes(typedefs);
-};
+    createTypes(typedefs);
+  };

@@ -1,8 +1,26 @@
-import { FlickrPhoto, Photo, ImageUrl, Geo } from "./types";
-import { THUMBS, SIZES } from "./constants";
+import {
+  Photo,
+  Geo,
+  GeoPermissions,
+  ThumbnailLabels,
+  ImageLabels,
+  FlickrPhotoLicense,
+  FlickrPeopleGetPublicPhotosResponse,
+  OrigLabels,
+  ThumbnailUrls,
+  ImageUrls,
+  FlickrPhotosLicensesGetInfoResponse,
+} from "./types";
+import { sizes } from "./constants";
 
-const getSizeDetails = (flickrPhoto: FlickrPhoto, size: string): ImageUrl => {
-  let sizeDetails: ImageUrl;
+const { THUMBS, CROPS, ORIG } = sizes;
+
+const getSizeDetails = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
+  size: ThumbnailLabels | ImageLabels | OrigLabels
+) => {
+  let sizeDetails;
+
   for (const property in flickrPhoto) {
     const lastElem = property.toString().split("_").pop();
     const firstElem = property.toString().split("_").shift();
@@ -34,7 +52,20 @@ const getSizeDetails = (flickrPhoto: FlickrPhoto, size: string): ImageUrl => {
   }
 };
 
-const getGeoDetails = (flickrPhoto: FlickrPhoto): Geo => {
+const getThumbnailUrls = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse
+): ThumbnailUrls =>
+  THUMBS.map((x) => getSizeDetails(flickrPhoto, x)).filter((x) => x !== null);
+const getImageUrls = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse
+): ImageUrls =>
+  [...CROPS, ...ORIG]
+    .map((x) => getSizeDetails(flickrPhoto, x))
+    .filter((x) => x !== null);
+
+const getGeoDetails = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse
+): Geo => {
   const geospatial = [
     "longitude",
     "latitude",
@@ -49,18 +80,49 @@ const getGeoDetails = (flickrPhoto: FlickrPhoto): Geo => {
   ];
 
   let geo: Geo;
+  let permissions: GeoPermissions;
 
   for (const property in flickrPhoto) {
-    const firstElem = property.toString().split("_").shift();
-
     if (geospatial.includes(property)) {
-      if (firstElem && firstElem === "geo") {
-        geo.permissions[property.toString().substring(4)] =
-          flickrPhoto[property];
+      if (property.startsWith("geo_")) {
+        switch (property) {
+          case "geo_is_public":
+            permissions = {
+              ...permissions,
+              is_public: flickrPhoto[property],
+            };
+            break;
+          case "geo_is_family":
+            permissions = {
+              ...permissions,
+              is_family: flickrPhoto[property],
+            };
+            break;
+          case "geo_is_friend":
+            permissions = {
+              ...permissions,
+              is_friend: flickrPhoto[property],
+            };
+            break;
+          case "geo_is_contact":
+            permissions = {
+              ...permissions,
+              is_contact: flickrPhoto[property],
+            };
+            break;
+        }
+      } else if (property === "place_id" || property === "woe_id") {
+        geo = {
+          ...geo,
+          [property]: flickrPhoto[property].toString(),
+        };
       } else {
-        geo[property] = parseFloat(flickrPhoto[property])
-          ? parseFloat(flickrPhoto[property])
-          : flickrPhoto[property];
+        geo = {
+          ...geo,
+          [property]: parseFloat(flickrPhoto[property])
+            ? parseFloat(flickrPhoto[property])
+            : flickrPhoto[property],
+        };
       }
     }
   }
@@ -68,33 +130,51 @@ const getGeoDetails = (flickrPhoto: FlickrPhoto): Geo => {
   return geo;
 };
 
-export const buildFlickrPhotoNode = (flickrPhoto: FlickrPhoto): Photo => {
+const getLicense = (
+  id: number,
+  licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
+): FlickrPhotoLicense => {
+  const _id = Number(id);
+
+  if (!isNaN(_id)) {
+    const { id, name, url } = licenses.find((x) => x.id === _id);
+
+    return {
+      _id: id,
+      name: name,
+      url: url,
+    };
+  } else {
+    return undefined;
+  }
+};
+
+const fixDate = (date) => (date ? new Date(date * 1000) : undefined);
+
+export const buildFlickrPhotoNode = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
+  licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
+): Photo => {
   const photo: Photo = {
     _id: flickrPhoto.id,
     owner: flickrPhoto.owner,
-    ownername: flickrPhoto?.ownername,
+    ownerName: flickrPhoto?.ownername,
     title: flickrPhoto.title,
-    license: flickrPhoto?.license,
+    license: getLicense(flickrPhoto?.license, licenses),
     description: flickrPhoto?.description?._content,
-    upload_date: flickrPhoto.dateupload
-      ? new Date(flickrPhoto.dateupload * 1000)
-      : undefined,
-    lastupdate_date: flickrPhoto.lastupdate
-      ? new Date(flickrPhoto.lastupdate * 1000)
-      : undefined,
-    datetaken: flickrPhoto?.datetaken,
+    dateUploaded: fixDate(flickrPhoto?.dateupload),
+    dateLastUpdated: fixDate(flickrPhoto?.lastupdate),
+    dateTaken: flickrPhoto?.datetaken,
     views: flickrPhoto?.views,
-    tags: flickrPhoto?.tags,
-    machine_tags: flickrPhoto.machine_tags,
-    geo: getGeoDetails(flickrPhoto),
+    tags: flickrPhoto?.tags ? flickrPhoto.tags.split(" ") : undefined,
+    machineTags: flickrPhoto?.machine_tags
+      ? flickrPhoto.machine_tags.split(" ")
+      : undefined,
+    geoData: getGeoDetails(flickrPhoto),
     media: flickrPhoto?.media,
-    media_status: flickrPhoto?.media_status,
-    imageUrls: SIZES.map((x) => getSizeDetails(flickrPhoto, x)).filter(
-      (x) => x !== null
-    ),
-    thumbnailUrls: THUMBS.map((x) => getSizeDetails(flickrPhoto, x)).filter(
-      (x) => x !== null
-    ),
+    pathAlias: flickrPhoto?.pathalias,
+    imageUrls: getImageUrls(flickrPhoto),
+    thumbnailUrls: getThumbnailUrls(flickrPhoto),
   };
 
   return photo;

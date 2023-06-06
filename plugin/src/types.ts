@@ -3,7 +3,26 @@ import type {
   IPluginRefOptions,
 } from "gatsby";
 
-export type FlickrPhoto = {
+import { sizes, extras } from "./constants";
+
+export type FlickrPhotoLicense = {
+  _id: number;
+  name: string;
+  url: string;
+};
+
+export type FlickrPhotosLicensesGetInfoResponse = {
+  licenses: {
+    license: {
+      id: number;
+      name: string;
+      url: string;
+    }[];
+  };
+  stat: string;
+};
+
+export type FlickrPeopleGetPublicPhotosResponse = {
   id: string | null;
   owner: string | null;
   secret: string | null;
@@ -74,55 +93,71 @@ type Description = {
   _content: string | null;
 };
 
-export type ImageUrl = {
-  label: string;
+type ImageUrlBase = {
   url: string;
   height: number;
   width: number;
   orientation: "landscape" | "portrait" | "square";
 };
 
+export type ThumbnailLabels = (typeof sizes.THUMBS)[number];
+export type ImageLabels = (typeof sizes.CROPS)[number];
+export type OrigLabels = (typeof sizes.ORIG)[number];
+
+export type ImageUrl = ImageUrlBase & {
+  label: ImageLabels | OrigLabels;
+};
+
+export type ThumbnailUrl = ImageUrlBase & {
+  label: ThumbnailLabels;
+};
+
 export type ImageUrls = ImageUrl[];
+export type ThumbnailUrls = ThumbnailUrl[];
+
+export type GeoPermissions = {
+  is_public: number | null;
+  is_friend: number | null;
+  is_family: number | null;
+  is_contact: number | null;
+};
 
 export type Geo = {
-  permissions: {
-    is_public: number | null;
-    is_friend: number | null;
-    is_family: number | null;
-    is_contact: number | null;
-  };
+  permissions: GeoPermissions;
   latitude?: number | null;
   longitude?: number | null;
   accuracy?: number | null;
   context?: number | null;
-  woeid?: number | string | null;
-  placeid?: number | string | null;
+  woeid?: string | null;
+  placeid?: string | null;
 };
 
 export type Photo = {
   _id: string;
-  owner: string | null;
-  ownername?: string | null;
-  title: string | null;
-  license?: number | null;
+  owner: string;
+  ownerName?: string;
+  title: string;
+  license?: FlickrPhotoLicense;
   description?: string | null;
-  upload_date?: Date | null;
-  lastupdate_date?: Date | null;
-  datetaken?: string | null;
+  dateUploaded?: Date;
+  dateLastUpdated?: Date;
+  dateTaken?: string | null;
   views?: number | null;
-  tags?: string | null;
-  machine_tags?: string | null;
-  geo: Geo;
+  tags?: string[] | null;
+  machineTags?: string[] | null;
+  geoData?: Geo;
   media?: string | null;
-  media_status?: string | null;
+  pathAlias?: string;
   imageUrls: ImageUrls;
-  thumbnailUrls: ImageUrls;
+  thumbnailUrls: ThumbnailUrls;
 };
+
+type FlickrApiExtras = Array<keyof typeof extras>;
 
 type IPluginOptionsKeys = {
   api_key: string;
   username: string;
-  extras: Array<string>;
+  extras: FlickrApiExtras;
 };
 
 /**
