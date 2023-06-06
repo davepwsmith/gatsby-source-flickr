@@ -1,4 +1,28 @@
-export type FlickrPhoto = {
+import type {
+  PluginOptions as GatsbyDefaultPluginOptions,
+  IPluginRefOptions,
+} from "gatsby";
+
+import { sizes, extras } from "./constants";
+
+export type FlickrPhotoLicense = {
+  _id: number;
+  name: string;
+  url: string;
+};
+
+export type FlickrPhotosLicensesGetInfoResponse = {
+  licenses: {
+    license: {
+      id: number;
+      name: string;
+      url: string;
+    }[];
+  };
+  stat: string;
+};
+
+export type FlickrPeopleGetPublicPhotosResponse = {
   id: string | null;
   owner: string | null;
   secret: string | null;
@@ -10,8 +34,8 @@ export type FlickrPhoto = {
   isfamily: number | null;
   license?: number | null;
   description?: Description;
-  dateupload?: string | null;
-  lastupdate?: string | null;
+  dateupload?: number | null;
+  lastupdate?: number | null;
   datetaken?: string | null;
   datetakengranularity?: number | null;
   datetakenunknown?: number | null;
@@ -69,58 +93,81 @@ type Description = {
   _content: string | null;
 };
 
-export type ImageUrl = {
+type ImageUrlBase = {
   url: string;
   height: number;
   width: number;
   orientation: "landscape" | "portrait" | "square";
 };
 
-export type ImageUrls = {
-  sq_75px: ImageUrl;
-  sq_150px: ImageUrl;
-  _100px: ImageUrl;
-  _240px: ImageUrl;
-  _320px: ImageUrl;
-  _500px: ImageUrl;
-  _640px: ImageUrl;
-  _800px: ImageUrl;
-  _1024px: ImageUrl;
-  _1600px: ImageUrl;
-  _2048px: ImageUrl;
-  original: ImageUrl;
+export type ThumbnailLabels = (typeof sizes.THUMBS)[number];
+export type ImageLabels = (typeof sizes.CROPS)[number];
+export type OrigLabels = (typeof sizes.ORIG)[number];
+
+export type ImageUrl = ImageUrlBase & {
+  label: ImageLabels | OrigLabels;
 };
 
-type Geo = {
-  permissions: {
-    is_public: number | null;
-    is_friend: number | null;
-    is_family: number | null;
-    is_contact: number | null;
-  };
+export type ThumbnailUrl = ImageUrlBase & {
+  label: ThumbnailLabels;
+};
+
+export type ImageUrls = ImageUrl[];
+export type ThumbnailUrls = ThumbnailUrl[];
+
+export type GeoPermissions = {
+  is_public: number | null;
+  is_friend: number | null;
+  is_family: number | null;
+  is_contact: number | null;
+};
+
+export type Geo = {
+  permissions: GeoPermissions;
   latitude?: number | null;
   longitude?: number | null;
   accuracy?: number | null;
   context?: number | null;
-  woeid: number | string | null;
-  placeid: number | string | null;
+  woeid?: string | null;
+  placeid?: string | null;
 };
 
 export type Photo = {
-  photo_id: string | null;
-  owner: string | null;
-  ownername?: string | null;
-  title: string | null;
-  license?: number | null;
+  _id: string;
+  owner: string;
+  ownerName?: string;
+  title: string;
+  license?: FlickrPhotoLicense;
   description?: string | null;
-  upload_date?: Date | null;
-  lastupdate_date?: Date | null;
-  datetaken?: string | null;
+  dateUploaded?: Date;
+  dateLastUpdated?: Date;
+  dateTaken?: string | null;
   views?: number | null;
-  tags?: string | null;
-  machine_tags?: string | null;
-  geo: Geo;
+  tags?: string[] | null;
+  machineTags?: string[] | null;
+  geoData?: Geo;
   media?: string | null;
-  media_status?: string | null;
+  pathAlias?: string;
   imageUrls: ImageUrls;
+  thumbnailUrls: ThumbnailUrls;
 };
+
+type FlickrApiExtras = Array<keyof typeof extras>;
+
+type IPluginOptionsKeys = {
+  api_key: string;
+  username: string;
+  extras: FlickrApiExtras;
+};
+
+/**
+ * Gatsby expects the plugin options to be of type "PluginOptions" for gatsby-node APIs (e.g. sourceNodes)
+ */
+export interface IPluginOptionsInternal
+  extends IPluginOptionsKeys,
+    GatsbyDefaultPluginOptions {}
+
+/**
+ * These are the public TypeScript types for consumption in gatsby-config
+ */
+export interface IPluginOptions extends IPluginOptionsKeys, IPluginRefOptions {}
