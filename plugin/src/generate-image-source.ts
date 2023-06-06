@@ -5,14 +5,8 @@ import type { ImageUrls, Photo } from "./types";
 import { IResponsiveImageProps } from "gatsby-plugin-image/dist/src/components/picture";
 import { GatsbyNode } from "gatsby";
 
-// TODO: Work out why images are being expanded to a size greater than their pixel size when 
-// some sizes are stipulated in graphql (e.g. width: 300, height: 300 renders 213x319px image)
-
 // TODO: Work out whether this could be done 'properly' using the generateImageData etc. bits.
 // This would mean that we could theoretically pass intrinsic and stipulated sizes, allow for ratios, etc. 
-
-// TODO: Work out a good way for a user to request a square image for display in grid (could be
-// as simple as fixing the width+height issue above and documenting that as the best way)
 
 interface IImageFilter {
   images: ImageUrls;
@@ -47,12 +41,19 @@ const filterImages = (
     ? Math.min(...heights.filter((num) => num >= height))
     : Math.max(...heights);
 
+  // Sort photos into size order
+  imageUrls.sort((a, b) => a.width - b.width);
+
+  //Get index of smallest image which satisfies both height and width image
+  const widest = imageUrls.findIndex(x => x.width === maxWidth)
+  const tallest = imageUrls.findIndex(x => x.height === maxHeight)
+  const idx = Math.max(widest, tallest)
+
   // Filter images to only include images below the largest size requested in the srcset
-  const filteredImages = imageUrls.filter(
-    (x) => x.height <= maxHeight && x.width <= maxWidth
-  );
-  filteredImages.sort((a, b) => a.width - b.width);
-  const largestImage = filteredImages[filteredImages.length - 1];
+  const filteredImages = imageUrls.slice(0,(idx+1))
+  
+  // Return largest image in set for fallback
+  const largestImage = filteredImages[idx];
 
   return {
     images: filteredImages,
