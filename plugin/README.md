@@ -69,8 +69,8 @@ The nodes will have the following fields by default:
 `_id`
 `owner`
 `title`
-`imageUrls`
-`thumbnailUrls`
+`images`
+`thumbnails`
 
 Any extras will add further nodes specific to those extras. 
 

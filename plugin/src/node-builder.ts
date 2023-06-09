@@ -7,44 +7,50 @@ import {
   FlickrPhotoLicense,
   FlickrPeopleGetPublicPhotosResponse,
   OrigLabels,
-  ThumbnailUrls,
-  ImageUrls,
   FlickrPhotosLicensesGetInfoResponse,
+  ImageOrThumb,
+  FlickrImage,
+  FlickrThumbnail,
 } from "./types";
 import { sizes } from "./constants";
 
 const { THUMBS, CROPS, ORIG } = sizes;
 
-const getSizeDetails = (
+/**
+ * Flickr's API responses are not very well structured - i.e. they are very flat with related items
+ * left ungrouped. This function groups them 
+ * @param flickrPhoto A single item from the flickr public photos response
+ * @param size A specific size to group for (e.g. 'o')
+ * @returns An object containg url, height, width, orientation and label for a single photo size
+*/
+const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels >(
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
-  size: ThumbnailLabels | ImageLabels | OrigLabels
-) => {
-  let sizeDetails;
+  size: T
+): ImageOrThumb<T> => {
 
-  for (const property in flickrPhoto) {
-    const lastElem = property.toString().split("_").pop();
-    const firstElem = property.toString().split("_").shift();
+  const widthKey = `width_${size}`
+  const heightKey = `height_${size}`
+  const urlKey = `url_${size}`
 
-    if (firstElem && lastElem && lastElem == size) {
-      // Some fields can come down as either string or number.
-      //GraphQL doesn't like that. Force width/height to number.
-      sizeDetails = {
-        ...sizeDetails,
-        [firstElem]: parseFloat(flickrPhoto[property])
-          ? parseFloat(flickrPhoto[property])
-          : flickrPhoto[property],
-      };
-    }
-  }
+  const width: number = flickrPhoto[widthKey]
+  const height: number = flickrPhoto[heightKey]
+  const url: string = flickrPhoto[urlKey]
 
-  if (sizeDetails) {
-    sizeDetails.label = size;
-    sizeDetails.orientation =
-      sizeDetails.width === sizeDetails.height
-        ? "square"
-        : sizeDetails.width > sizeDetails.height
-        ? "landscape"
-        : "portrait";
+  if (width && height && url) {
+    const orientation =
+    width === height
+      ? "square"
+      : width > height
+      ? "landscape"
+      : "portrait";
+
+    let sizeDetails = {
+      src: url,
+      width: width, 
+      height: height,
+      label: size,
+      orientation: orientation
+    } as ImageOrThumb<T>
 
     return sizeDetails;
   } else {
@@ -52,17 +58,33 @@ const getSizeDetails = (
   }
 };
 
-const getThumbnailUrls = (
+/**
+ * Get all the thumbnail sized images from a flickr API response
+ * @param flickrPhoto A single flickr photo
+ * @returns A list of thumbnail objects
+ */
+const getThumbnails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
-): ThumbnailUrls =>
+): FlickrThumbnail[] =>
   THUMBS.map((x) => getSizeDetails(flickrPhoto, x)).filter((x) => x !== null);
-const getImageUrls = (
+
+/**
+ * Get all the normal sized images from a flickr API response
+ * @param flickrPhoto A single flickr photo
+ * @returns A list of image objects
+ */
+const getImages = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
-): ImageUrls =>
+): FlickrImage[] =>
   [...CROPS, ...ORIG]
     .map((x) => getSizeDetails(flickrPhoto, x))
     .filter((x) => x !== null);
 
+    /**
+     * Structures the geotagging information returned by the flickr API
+     * @param flickrPhoto A single flickr photo
+     * @returns A structured set of geotagging information for a photo
+     */
 const getGeoDetails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): Geo => {
@@ -130,6 +152,12 @@ const getGeoDetails = (
   return geo;
 };
 
+/**
+ * Determine the license type from the reported ID
+ * @param id The ID number of a license type returned on a flickr photo object
+ * @param licenses An array of all the license types
+ * @returns A single license object
+ */
 const getLicense = (
   id: number,
   licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
@@ -149,7 +177,12 @@ const getLicense = (
   }
 };
 
-const fixDate = (date) => (date ? new Date(date * 1000) : undefined);
+/**
+ * Parse unix timestamp to date
+ * @param date A date, as a unix timestamp
+ * @returns A date as a javascript Date object
+ */
+const fixDate = (date: number) => (date ? new Date(date * 1000) : undefined);
 
 export const buildFlickrPhotoNode = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
@@ -173,8 +206,8 @@ export const buildFlickrPhotoNode = (
     geoData: getGeoDetails(flickrPhoto),
     media: flickrPhoto?.media,
     pathAlias: flickrPhoto?.pathalias,
-    imageUrls: getImageUrls(flickrPhoto),
-    thumbnailUrls: getThumbnailUrls(flickrPhoto),
+    images: getImages(flickrPhoto),
+    thumbnails: getThumbnails(flickrPhoto),
   };
 
   return photo;

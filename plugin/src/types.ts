@@ -4,6 +4,7 @@ import type {
 } from "gatsby";
 
 import { sizes, extras } from "./constants";
+import { IImage } from "gatsby-plugin-image";
 
 export type FlickrPhotoLicense = {
   _id: number;
@@ -93,10 +94,7 @@ type Description = {
   _content: string | null;
 };
 
-type ImageUrlBase = {
-  url: string;
-  height: number;
-  width: number;
+type Orientation = {
   orientation: "landscape" | "portrait" | "square";
 };
 
@@ -104,16 +102,16 @@ export type ThumbnailLabels = (typeof sizes.THUMBS)[number];
 export type ImageLabels = (typeof sizes.CROPS)[number];
 export type OrigLabels = (typeof sizes.ORIG)[number];
 
-export type ImageUrl = ImageUrlBase & {
+export type FlickrImage = IImage & Orientation & {
   label: ImageLabels | OrigLabels;
 };
 
-export type ThumbnailUrl = ImageUrlBase & {
+export type FlickrThumbnail = IImage & Orientation & {
   label: ThumbnailLabels;
 };
 
-export type ImageUrls = ImageUrl[];
-export type ThumbnailUrls = ThumbnailUrl[];
+// This utitlity type is needed for functions that can return either an image URL or a thumbnail URL
+export type ImageOrThumb<T extends ThumbnailLabels | ImageLabels | OrigLabels> = T extends ThumbnailLabels ? FlickrThumbnail : FlickrImage
 
 export type GeoPermissions = {
   is_public: number | null;
@@ -148,11 +146,11 @@ export type Photo = {
   geoData?: Geo;
   media?: string | null;
   pathAlias?: string;
-  imageUrls: ImageUrls;
-  thumbnailUrls: ThumbnailUrls;
+  images: FlickrImage[];
+  thumbnails: FlickrThumbnail[];
 };
 
-type FlickrApiExtras = Array<keyof typeof extras>;
+type FlickrApiExtras = ReadonlyArray<keyof typeof extras>;
 
 type IPluginOptionsKeys = {
   api_key: string;

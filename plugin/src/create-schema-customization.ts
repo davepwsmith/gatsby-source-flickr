@@ -21,8 +21,8 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
       machineTags: [String]
       media: String
       pathAlias: String
-      imageUrls: [ImageUrl]!
-      thumbnailUrls: [ImageUrl]!
+      images: [FlickrImage]!
+      thumbnails: [FlickrImage]!
     } 
 
     type License {
@@ -48,12 +48,12 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
       placeid: String
     }
 
-    type ImageUrl {
+    type FlickrImage {
       label: String
       height: Int!
       width: Int!
       orientation: String!
-      url: String!
+      src: String!
     }
   `;
 
