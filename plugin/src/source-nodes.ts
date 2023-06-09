@@ -14,8 +14,13 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   gatsbyApi,
   pluginOptions: IPluginOptionsInternal
 ) => {
-  const { actions, createContentDigest, createNodeId } = gatsbyApi;
+  const { actions, createContentDigest, createNodeId, reporter } = gatsbyApi;
   const { createNode } = actions;
+
+  const sourcingTimer = reporter.activityTimer(
+    `Getting and Transforming photo data from Flickr`
+  );
+  sourcingTimer.start();
 
   const FLICKR_API_KEY: string = pluginOptions.api_key;
   const FLICKR_USER: string = pluginOptions.username;
@@ -38,12 +43,27 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   // Instantiate flickr sdk
   const flickr = new Flickr(FLICKR_API_KEY);
 
-  const getLicenses = async () => {
-    const res_licenses = await flickr.photos.licenses.getInfo({});
-    const body: FlickrPhotosLicensesGetInfoResponse = await res_licenses.body;
+  const flickrError = (error) => {
+    return sourcingTimer.panicOnBuild({
+      id: `${error.code}`,
+      context: {
+        sourceMessage: `Sourcing from the Flickr API failed`,
+        flickrError: error.message,
+      },
+    });
+  };
 
-    const licenses = body.licenses.license;
-    return licenses;
+  const getLicenses = async () => {
+    try {
+      const res_licenses = await flickr.photos.licenses.getInfo({});
+      const body: FlickrPhotosLicensesGetInfoResponse = await res_licenses.body;
+
+      const licenses = body.licenses.license;
+      return licenses;
+    } catch (error) {
+      flickrError(error);
+      return null;
+    }
   };
 
   // Get user ID from username, which people are more likely to know
@@ -53,8 +73,8 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
       const userId: string = await res.body.user.nsid;
       return userId;
     } catch (error) {
-      console.warn("Error: ", error);
-      return error;
+      flickrError(error);
+      return null;
     }
   };
 
@@ -78,7 +98,8 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
         isLast = page === data.pages;
         yield data;
       } catch (error) {
-        console.warn(`exception during fetch`, error);
+        flickrError(error);
+        // sourcingTimer.panicOnBuild(error)
         yield {
           done: true,
           value: "error",
@@ -103,6 +124,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   // Get 'em...
   const licenses = await getLicenses();
   const photos = await flickrPhotos();
+  sourcingTimer.setStatus(`Processing ${photos.length} photos`);
 
   // loop through data and create Gatsby nodes
   photos.forEach((item) => {
@@ -121,6 +143,5 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
       },
     });
   });
-
-  return;
+  sourcingTimer.end();
 };

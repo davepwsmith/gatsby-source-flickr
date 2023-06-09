@@ -6,11 +6,8 @@ import type {
 import { sizes, extras } from "./constants";
 import { IImage } from "gatsby-plugin-image";
 
-export type FlickrPhotoLicense = {
-  _id: number;
-  name: string;
-  url: string;
-};
+// These types were invented based on a sample of responses from the 
+// Flickr API - they may or may not actually be accurate...
 
 export type FlickrPhotosLicensesGetInfoResponse = {
   licenses: {
@@ -24,74 +21,82 @@ export type FlickrPhotosLicensesGetInfoResponse = {
 };
 
 export type FlickrPeopleGetPublicPhotosResponse = {
-  id: string | null;
-  owner: string | null;
-  secret: string | null;
-  server: string | null;
-  farm: number | string | null;
-  title: string | null;
-  ispublic: number | null;
-  isfriend: number | null;
-  isfamily: number | null;
-  license?: number | null;
+  id: string;
+  owner: string;
+  secret: string;
+  server: string;
+  farm: number | string;
+  title: string;
+  ispublic: number;
+  isfriend: number;
+  isfamily: number;
+  license?: number;
   description?: Description;
-  dateupload?: number | null;
-  lastupdate?: number | null;
-  datetaken?: string | null;
-  datetakengranularity?: number | null;
-  datetakenunknown?: number | null;
-  ownername?: string | null;
-  iconserver?: string | null;
-  iconfarm?: number | null;
-  views?: number | null;
-  tags?: string | null;
-  machine_tags?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  accuracy?: number | null;
-  context?: number | null;
-  media?: string | null;
-  media_status?: string | null;
-  url_sq?: string | null;
-  height_sq?: number | null;
-  width_sq?: number | null;
-  url_t?: string | null;
-  height_t?: number | null;
-  width_t?: number | null;
-  url_s?: string | null;
-  height_s?: string | null;
-  width_s?: string | null;
-  url_q?: string | null;
-  height_q?: string | null;
-  width_q?: string | null;
-  url_m?: string | null;
-  height_m?: string | null;
-  width_m?: string | null;
-  url_n?: string | null;
-  height_n?: string | null;
-  width_n?: string | null;
-  url_z?: string | null;
-  height_z?: string | null;
-  width_z?: string | null;
-  url_c?: string | null;
-  height_c?: string | null;
-  width_c?: string | null;
-  url_l?: string | null;
-  height_l?: string | null;
-  width_l?: string | null;
-  url_h?: string | null;
-  height_h?: string | null;
-  width_h?: string | null;
-  url_k?: string | null;
-  height_k?: string | null;
-  width_k?: string | null;
-  pathalias?: string | null;
-  woeid?: number | string | null;
-  placeid?: string | null;
+  dateupload?: number;
+  lastupdate?: number;
+  datetaken?: string;
+  datetakengranularity?: number;
+  datetakenunknown?: number;
+  ownername?: string;
+  iconserver?: string;
+  iconfarm?: number;
+  views?: number;
+  tags?: string;
+  machine_tags?: string;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+  context?: number;
+  media?: string;
+  media_status?: string;
+  url_sq?: string;
+  height_sq?: number;
+  width_sq?: number;
+  url_t?: string;
+  height_t?: number;
+  width_t?: number;
+  url_s?: string;
+  height_s?: string;
+  width_s?: string;
+  url_q?: string;
+  height_q?: string;
+  width_q?: string;
+  url_m?: string;
+  height_m?: string;
+  width_m?: string;
+  url_n?: string;
+  height_n?: string;
+  width_n?: string;
+  url_z?: string;
+  height_z?: string;
+  width_z?: string;
+  url_c?: string;
+  height_c?: string;
+  width_c?: string;
+  url_l?: string;
+  height_l?: string;
+  width_l?: string;
+  url_h?: string;
+  height_h?: string;
+  width_h?: string;
+  url_k?: string;
+  height_k?: string;
+  width_k?: string;
+  pathalias?: string;
+  woeid?: number | string;
+  placeid?: string;
+};
+
+// Types in use in my code. 
+
+export type FlickrPhotoLicense = {
+  _id: number;
+  name: string;
+  url: string;
 };
 
 type Description = {
-  _content: string | null;
+  _content: string;
 };
 
 type Orientation = {
@@ -102,32 +107,35 @@ export type ThumbnailLabels = (typeof sizes.THUMBS)[number];
 export type ImageLabels = (typeof sizes.CROPS)[number];
 export type OrigLabels = (typeof sizes.ORIG)[number];
 
-export type FlickrImage = IImage & Orientation & {
-  label: ImageLabels | OrigLabels;
-};
+export type FlickrImage = IImage &
+  Orientation & {
+    label: ImageLabels | OrigLabels;
+  };
 
-export type FlickrThumbnail = IImage & Orientation & {
-  label: ThumbnailLabels;
-};
+export type FlickrThumbnail = IImage &
+  Orientation & {
+    label: ThumbnailLabels;
+  };
 
 // This utitlity type is needed for functions that can return either an image URL or a thumbnail URL
-export type ImageOrThumb<T extends ThumbnailLabels | ImageLabels | OrigLabels> = T extends ThumbnailLabels ? FlickrThumbnail : FlickrImage
+export type ImageOrThumb<T extends ThumbnailLabels | ImageLabels | OrigLabels> =
+  T extends ThumbnailLabels ? FlickrThumbnail : FlickrImage;
 
 export type GeoPermissions = {
-  is_public: number | null;
-  is_friend: number | null;
-  is_family: number | null;
-  is_contact: number | null;
+  is_public?: number;
+  is_friend?: number;
+  is_family?: number;
+  is_contact?: number;
 };
 
 export type Geo = {
-  permissions: GeoPermissions;
-  latitude?: number | null;
-  longitude?: number | null;
-  accuracy?: number | null;
-  context?: number | null;
-  woeid?: string | null;
-  placeid?: string | null;
+  permissions?: GeoPermissions;
+  latitude?: number;
+  longitude?: number;
+  accuracy?: number;
+  context?: number;
+  woeid?: string;
+  placeid?: string;
 };
 
 export type Photo = {
@@ -136,15 +144,15 @@ export type Photo = {
   ownerName?: string;
   title: string;
   license?: FlickrPhotoLicense;
-  description?: string | null;
+  description?: string;
   dateUploaded?: Date;
   dateLastUpdated?: Date;
-  dateTaken?: string | null;
-  views?: number | null;
-  tags?: string[] | null;
-  machineTags?: string[] | null;
+  dateTaken?: string;
+  views?: number;
+  tags?: string[];
+  machineTags?: string[];
   geoData?: Geo;
-  media?: string | null;
+  media?: string;
   pathAlias?: string;
   images: FlickrImage[];
   thumbnails: FlickrThumbnail[];

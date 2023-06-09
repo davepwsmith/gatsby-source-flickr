@@ -1,8 +1,8 @@
 import type { GatsbyNode } from "gatsby";
 import type { ObjectSchema } from "gatsby-plugin-utils";
-import { extras } from './constants'
+import { extras } from "./constants";
 
-const validExtras = Object.keys(extras)
+const validExtras = Object.keys(extras);
 
 export const pluginOptionsSchema: GatsbyNode["pluginOptionsSchema"] = ({
   Joi,

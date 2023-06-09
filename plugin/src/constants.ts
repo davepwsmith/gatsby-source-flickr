@@ -23,3 +23,16 @@ export const extras = {
   media: "media",
   pathAlias: "path_alias",
 } as const;
+
+export const FLICKR_ERROR_CODES = {
+  USERNAME_NOT_FOUND: "1",
+  NO_USERNAME_SPECIFIED: "2",
+  INVALID_API_KEY: "100",
+  SERVICE_CURRENTLY_UNAVAILABLE: "105",
+  WRITE_OPERATION_FAILED: "106",
+  REPONSE_FORMAT_NOT_FOUND: "111",
+  METHOD_NOT_FOUND: "112",
+  INVALID_SOAP_ENVELOPE: "114",
+  INVALID_RPC_: "115",
+  BAD_URL: "116",
+} as const;

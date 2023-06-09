@@ -18,39 +18,34 @@ const { THUMBS, CROPS, ORIG } = sizes;
 
 /**
  * Flickr's API responses are not very well structured - i.e. they are very flat with related items
- * left ungrouped. This function groups them 
+ * left ungrouped. This function groups them
  * @param flickrPhoto A single item from the flickr public photos response
  * @param size A specific size to group for (e.g. 'o')
  * @returns An object containg url, height, width, orientation and label for a single photo size
-*/
-const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels >(
+ */
+const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels>(
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
   size: T
 ): ImageOrThumb<T> => {
+  const widthKey = `width_${size}`;
+  const heightKey = `height_${size}`;
+  const urlKey = `url_${size}`;
 
-  const widthKey = `width_${size}`
-  const heightKey = `height_${size}`
-  const urlKey = `url_${size}`
-
-  const width: number = flickrPhoto[widthKey]
-  const height: number = flickrPhoto[heightKey]
-  const url: string = flickrPhoto[urlKey]
+  const width: number = flickrPhoto[widthKey];
+  const height: number = flickrPhoto[heightKey];
+  const url: string = flickrPhoto[urlKey];
 
   if (width && height && url) {
     const orientation =
-    width === height
-      ? "square"
-      : width > height
-      ? "landscape"
-      : "portrait";
+      width === height ? "square" : width > height ? "landscape" : "portrait";
 
-    let sizeDetails = {
+    const sizeDetails = {
       src: url,
-      width: width, 
+      width: width,
       height: height,
       label: size,
-      orientation: orientation
-    } as ImageOrThumb<T>
+      orientation: orientation,
+    } as ImageOrThumb<T>;
 
     return sizeDetails;
   } else {
@@ -80,11 +75,11 @@ const getImages = (
     .map((x) => getSizeDetails(flickrPhoto, x))
     .filter((x) => x !== null);
 
-    /**
-     * Structures the geotagging information returned by the flickr API
-     * @param flickrPhoto A single flickr photo
-     * @returns A structured set of geotagging information for a photo
-     */
+/**
+ * Structures the geotagging information returned by the flickr API
+ * @param flickrPhoto A single flickr photo
+ * @returns A structured set of geotagging information for a photo
+ */
 const getGeoDetails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): Geo => {
