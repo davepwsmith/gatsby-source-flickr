@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2023-06-06
+
+### Added
+- Include type declarations in npm package
+
 ## [2.0.0] - 2023-06-05
 
 This is a major version release, which includes several improvements, but also several
