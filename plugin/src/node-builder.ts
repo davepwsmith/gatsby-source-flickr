@@ -23,7 +23,9 @@ const { THUMBS, CROPS, ORIG } = sizes;
  * @param size A specific size to group for (e.g. 'o')
  * @returns An object containg url, height, width, orientation and label for a single photo size
  */
-const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels>(
+export const getSizeDetails = <
+  T extends ThumbnailLabels | ImageLabels | OrigLabels
+>(
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
   size: T
 ): ImageOrThumb<T> => {
@@ -31,8 +33,8 @@ const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels>(
   const heightKey = `height_${size}`;
   const urlKey = `url_${size}`;
 
-  const width: number = flickrPhoto[widthKey];
-  const height: number = flickrPhoto[heightKey];
+  const width = Number(flickrPhoto[widthKey]);
+  const height = Number(flickrPhoto[heightKey]);
   const url: string = flickrPhoto[urlKey];
 
   if (width && height && url) {
@@ -58,7 +60,7 @@ const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels>(
  * @param flickrPhoto A single flickr photo
  * @returns A list of thumbnail objects
  */
-const getThumbnails = (
+export const getThumbnails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): FlickrThumbnail[] =>
   THUMBS.map((x) => getSizeDetails(flickrPhoto, x)).filter((x) => x !== null);
@@ -68,7 +70,7 @@ const getThumbnails = (
  * @param flickrPhoto A single flickr photo
  * @returns A list of image objects
  */
-const getImages = (
+export const getImages = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): FlickrImage[] =>
   [...CROPS, ...ORIG]
@@ -80,7 +82,7 @@ const getImages = (
  * @param flickrPhoto A single flickr photo
  * @returns A structured set of geotagging information for a photo
  */
-const getGeoDetails = (
+export const getGeoDetails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): Geo => {
   const geospatial = [
@@ -144,6 +146,8 @@ const getGeoDetails = (
     }
   }
 
+  geo.permissions = permissions;
+
   return geo;
 };
 
@@ -153,8 +157,8 @@ const getGeoDetails = (
  * @param licenses An array of all the license types
  * @returns A single license object
  */
-const getLicense = (
-  id: number,
+export const getLicense = (
+  id: string | number,
   licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
 ): FlickrPhotoLicense => {
   const _id = Number(id);
@@ -177,7 +181,12 @@ const getLicense = (
  * @param date A date, as a unix timestamp
  * @returns A date as a javascript Date object
  */
-const fixDate = (date: number) => (date ? new Date(date * 1000) : undefined);
+export const fixDate = (date: string | number) =>
+  Number(date)
+    ? new Date(Number(date) * 1000)
+    : !isNaN(new Date(date).getTime())
+    ? new Date(date)
+    : undefined;
 
 export const buildFlickrPhotoNode = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
@@ -192,12 +201,11 @@ export const buildFlickrPhotoNode = (
     description: flickrPhoto?.description?._content,
     dateUploaded: fixDate(flickrPhoto?.dateupload),
     dateLastUpdated: fixDate(flickrPhoto?.lastupdate),
-    dateTaken: flickrPhoto?.datetaken,
-    views: flickrPhoto?.views,
-    tags: flickrPhoto?.tags ? flickrPhoto.tags.split(" ") : undefined,
-    machineTags: flickrPhoto?.machine_tags
-      ? flickrPhoto.machine_tags.split(" ")
-      : undefined,
+    dateTaken: fixDate(flickrPhoto?.datetaken),
+    views: flickrPhoto?.views && Number(flickrPhoto?.views),
+    tags: flickrPhoto?.tags && flickrPhoto.tags.split(" "),
+    machineTags:
+      flickrPhoto?.machine_tags && flickrPhoto.machine_tags.split(" "),
     geoData: getGeoDetails(flickrPhoto),
     media: flickrPhoto?.media,
     pathAlias: flickrPhoto?.pathalias,
