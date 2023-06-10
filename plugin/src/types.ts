@@ -6,7 +6,7 @@ import type {
 import { sizes, extras } from "./constants";
 import { IImage } from "gatsby-plugin-image";
 
-// These types were invented based on a sample of responses from the 
+// These types were invented based on a sample of responses from the
 // Flickr API - they may or may not actually be accurate...
 
 export type FlickrPhotosLicensesGetInfoResponse = {
@@ -25,12 +25,13 @@ export type FlickrPeopleGetPublicPhotosResponse = {
   owner: string;
   secret: string;
   server: string;
-  farm: number | string;
+  farm: string | number;
   title: string;
-  ispublic: number;
-  isfriend: number;
-  isfamily: number;
-  license?: string;
+  ispublic?: string | number;
+  isfriend?: string | number;
+  isfamily?: string | number;
+  iscontact?: string | number;
+  license?: string | number;
   description?: Description;
   dateupload?: string | number;
   lastupdate?: string | number;
@@ -72,7 +73,7 @@ export type FlickrPeopleGetPublicPhotosResponse = {
   width_z?: string | number;
   url_c?: string;
   height_c?: string | number;
-  width_c?: string | number
+  width_c?: string | number;
   url_l?: string;
   height_l?: string | number;
   width_l?: string | number;
@@ -83,11 +84,11 @@ export type FlickrPeopleGetPublicPhotosResponse = {
   height_k?: string | number;
   width_k?: string | number;
   pathalias?: string;
-  woeid?: number | string;
+  woeid?: string | number;
   placeid?: string;
 };
 
-// Types in use in my code. 
+// Types in use in my code.
 
 export type FlickrPhotoLicense = {
   _id: number;
@@ -121,15 +122,15 @@ export type FlickrThumbnail = IImage &
 export type ImageOrThumb<T extends ThumbnailLabels | ImageLabels | OrigLabels> =
   T extends ThumbnailLabels ? FlickrThumbnail : FlickrImage;
 
-export type GeoPermissions = {
-  is_public?: number;
-  is_friend?: number;
-  is_family?: number;
-  is_contact?: number;
+export type FlickrPermissions = {
+  public?: boolean;
+  friend?: boolean;
+  family?: boolean;
+  contact?: boolean;
 };
 
 export type Geo = {
-  permissions?: GeoPermissions;
+  permissions?: FlickrPermissions;
   latitude?: number;
   longitude?: number;
   accuracy?: number;
@@ -144,6 +145,7 @@ export type Photo = {
   ownerName?: string;
   title: string;
   license?: FlickrPhotoLicense;
+  permissions: FlickrPermissions;
   description?: string;
   dateUploaded?: Date;
   dateLastUpdated?: Date;

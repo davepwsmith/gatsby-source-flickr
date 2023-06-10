@@ -1,7 +1,6 @@
 import {
   Photo,
   Geo,
-  GeoPermissions,
   ThumbnailLabels,
   ImageLabels,
   FlickrPhotoLicense,
@@ -11,6 +10,7 @@ import {
   ImageOrThumb,
   FlickrImage,
   FlickrThumbnail,
+  FlickrPermissions,
 } from "./types";
 import { sizes } from "./constants";
 
@@ -23,9 +23,7 @@ const { THUMBS, CROPS, ORIG } = sizes;
  * @param size A specific size to group for (e.g. 'o')
  * @returns An object containg url, height, width, orientation and label for a single photo size
  */
-export const getSizeDetails = <
-  T extends ThumbnailLabels | ImageLabels | OrigLabels
->(
+const getSizeDetails = <T extends ThumbnailLabels | ImageLabels | OrigLabels>(
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
   size: T
 ): ImageOrThumb<T> => {
@@ -60,7 +58,7 @@ export const getSizeDetails = <
  * @param flickrPhoto A single flickr photo
  * @returns A list of thumbnail objects
  */
-export const getThumbnails = (
+const getThumbnails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): FlickrThumbnail[] =>
   THUMBS.map((x) => getSizeDetails(flickrPhoto, x)).filter((x) => x !== null);
@@ -70,7 +68,7 @@ export const getThumbnails = (
  * @param flickrPhoto A single flickr photo
  * @returns A list of image objects
  */
-export const getImages = (
+const getImages = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): FlickrImage[] =>
   [...CROPS, ...ORIG]
@@ -82,16 +80,12 @@ export const getImages = (
  * @param flickrPhoto A single flickr photo
  * @returns A structured set of geotagging information for a photo
  */
-export const getGeoDetails = (
+const getGeoDetails = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse
 ): Geo => {
   const geospatial = [
     "longitude",
     "latitude",
-    "geo_is_public",
-    "geo_is_family",
-    "geo_is_friend",
-    "geo_is_contact",
     "accuracy",
     "context",
     "place_id",
@@ -99,38 +93,11 @@ export const getGeoDetails = (
   ];
 
   let geo: Geo;
-  let permissions: GeoPermissions;
+  const permissions: FlickrPermissions = fixPermissions(flickrPhoto, "geo");
 
   for (const property in flickrPhoto) {
     if (geospatial.includes(property)) {
-      if (property.startsWith("geo_")) {
-        switch (property) {
-          case "geo_is_public":
-            permissions = {
-              ...permissions,
-              is_public: flickrPhoto[property],
-            };
-            break;
-          case "geo_is_family":
-            permissions = {
-              ...permissions,
-              is_family: flickrPhoto[property],
-            };
-            break;
-          case "geo_is_friend":
-            permissions = {
-              ...permissions,
-              is_friend: flickrPhoto[property],
-            };
-            break;
-          case "geo_is_contact":
-            permissions = {
-              ...permissions,
-              is_contact: flickrPhoto[property],
-            };
-            break;
-        }
-      } else if (property === "place_id" || property === "woe_id") {
+      if (property === "place_id" || property === "woe_id") {
         geo = {
           ...geo,
           [property]: flickrPhoto[property].toString(),
@@ -146,9 +113,12 @@ export const getGeoDetails = (
     }
   }
 
-  geo.permissions = permissions;
+  const geoData: Geo = {
+    ...geo,
+    permissions: permissions,
+  };
 
-  return geo;
+  return geoData;
 };
 
 /**
@@ -157,8 +127,8 @@ export const getGeoDetails = (
  * @param licenses An array of all the license types
  * @returns A single license object
  */
-export const getLicense = (
-  id: string | number,
+const getLicense = (
+  id: string | number | undefined,
   licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
 ): FlickrPhotoLicense => {
   const _id = Number(id);
@@ -177,41 +147,84 @@ export const getLicense = (
 };
 
 /**
- * Parse unix timestamp to date
+ * Parse Flickr dates to Javascript Date
  * @param date A date, as a unix timestamp
  * @returns A date as a javascript Date object
  */
-export const fixDate = (date: string | number) =>
+const fixDate = (date: string | number) =>
   Number(date)
     ? new Date(Number(date) * 1000)
     : !isNaN(new Date(date).getTime())
     ? new Date(date)
     : undefined;
 
+const fixPermissions = (
+  flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
+  prefix?: string
+) => {
+  let permissions: FlickrPermissions;
+  const permissionKeys = ["ispublic", "isfriend", "isfamily", "iscontact"];
+
+  for (const property in flickrPhoto) {
+    if (prefix) {
+      const cleanKey = property.replace(prefix, "").replace(/_/g, "");
+      if (property.startsWith(prefix) && permissionKeys.includes(cleanKey)) {
+        const key = cleanKey.replace("is", "");
+        permissions = {
+          ...permissions,
+          [key]: Boolean(Number(flickrPhoto[property])),
+        };
+      }
+    } else {
+      if (permissionKeys.includes(property)) {
+        const cleanKey = property;
+        const key = cleanKey.replace("is", "");
+        permissions = {
+          ...permissions,
+          [key]: Boolean(Number(flickrPhoto[property])),
+        };
+      }
+    }
+  }
+
+  return permissions;
+};
+
 export const buildFlickrPhotoNode = (
   flickrPhoto: FlickrPeopleGetPublicPhotosResponse,
-  licenses: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
+  licenses?: FlickrPhotosLicensesGetInfoResponse["licenses"]["license"]
 ): Photo => {
-  const photo: Photo = {
-    _id: flickrPhoto.id,
-    owner: flickrPhoto.owner,
-    ownerName: flickrPhoto?.ownername,
-    title: flickrPhoto.title,
-    license: getLicense(flickrPhoto?.license, licenses),
-    description: flickrPhoto?.description?._content,
-    dateUploaded: fixDate(flickrPhoto?.dateupload),
-    dateLastUpdated: fixDate(flickrPhoto?.lastupdate),
-    dateTaken: fixDate(flickrPhoto?.datetaken),
-    views: flickrPhoto?.views && Number(flickrPhoto?.views),
-    tags: flickrPhoto?.tags && flickrPhoto.tags.split(" "),
-    machineTags:
-      flickrPhoto?.machine_tags && flickrPhoto.machine_tags.split(" "),
-    geoData: getGeoDetails(flickrPhoto),
-    media: flickrPhoto?.media,
-    pathAlias: flickrPhoto?.pathalias,
-    images: getImages(flickrPhoto),
-    thumbnails: getThumbnails(flickrPhoto),
-  };
-
-  return photo;
+  try {
+    const photo: Photo = {
+      _id: flickrPhoto.id,
+      owner: flickrPhoto.owner,
+      ownerName: flickrPhoto?.ownername,
+      title: flickrPhoto.title,
+      license: licenses
+        ? getLicense(flickrPhoto?.license, licenses)
+        : undefined,
+      permissions: fixPermissions(flickrPhoto),
+      description: flickrPhoto?.description?._content,
+      dateUploaded: fixDate(flickrPhoto?.dateupload),
+      dateLastUpdated: fixDate(flickrPhoto?.lastupdate),
+      dateTaken: fixDate(flickrPhoto?.datetaken),
+      views: flickrPhoto?.views ? Number(flickrPhoto?.views) : undefined,
+      tags: flickrPhoto?.tags ? flickrPhoto.tags.split(" ") : undefined,
+      machineTags: flickrPhoto?.machine_tags
+        ? flickrPhoto.machine_tags.split(" ")
+        : undefined,
+      geoData: getGeoDetails(flickrPhoto),
+      media: flickrPhoto?.media,
+      pathAlias: flickrPhoto?.pathalias,
+      images: getImages(flickrPhoto),
+      thumbnails: getThumbnails(flickrPhoto),
+    };
+    if (photo._id && photo.owner && photo.title) {
+      return photo;
+    } else {
+      throw Error("Bad photo data input");
+    }
+  } catch (error) {
+    return error;
+  }
 };
