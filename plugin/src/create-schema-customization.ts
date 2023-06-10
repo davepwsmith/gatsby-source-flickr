@@ -32,10 +32,10 @@ export const createSchemaCustomization: GatsbyNode["createSchemaCustomization"] 
     }
 
     type GeoPermissions {
-      is_public: Int
-      is_friend: Int
-      is_family: Int
-      is_contact: Int
+      is_public: Boolean
+      is_friend: Boolean
+      is_family: Boolean
+      is_contact: Boolean
     }
 
     type Geo {

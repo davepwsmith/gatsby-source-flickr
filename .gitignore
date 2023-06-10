@@ -4,3 +4,4 @@ dist
 gatsby-types.d.ts
 public
 .cache
+coverage

@@ -17,26 +17,22 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
   const { actions, createContentDigest, createNodeId, reporter } = gatsbyApi;
   const { createNode } = actions;
 
-  const sourcingTimer = reporter.activityTimer(
-    `Getting and Transforming photo data from Flickr`
-  );
-  sourcingTimer.start();
-
   const FLICKR_API_KEY: string = pluginOptions.api_key;
   const FLICKR_USER: string = pluginOptions.username;
   const EXTRAS = pluginOptions.extras;
 
   // Sizes available in flickr API (NB: these are subtly different to the
   // sizes documented in flickr URLs - confusing!)
-
-  // Some defaults...
   const { THUMBS, CROPS, ORIG } = sizes;
   const all_sizes = [...THUMBS, ...CROPS, ...ORIG];
 
-  // Expand all the sizes we want to retrieve
-  const size_extras: string = all_sizes
-    .map((size) => `height_${size}, width_${size}, url_${size}`)
-    .join();
+  const sourcingTimer = reporter.activityTimer(
+    `Getting and Transforming photo data from Flickr`
+  );
+  sourcingTimer.start();
+
+  // Expand all the sizes we want to retrieve into url param string
+  const size_extras: string = all_sizes.map((size) => `url_${size}`).join();
 
   // Construct string of extra params for flickr API
   const extras = size_extras + EXTRAS.join();
@@ -53,6 +49,7 @@ export const sourceNodes: GatsbyNode["sourceNodes"] = async (
     });
   };
 
+  // Get a list of possible license types
   const getLicenses = async () => {
     try {
       const res_licenses = await flickr.photos.licenses.getInfo({});
