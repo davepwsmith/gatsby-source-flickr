@@ -369,8 +369,6 @@ describe("buildFlickrPhotoNode Function", () => {
       error: "message",
     };
     // @ts-expect-error To test unexpected input from flickr API
-    console.log(buildFlickrPhotoNode(badPhoto));
-    // @ts-expect-error To test unexpected input from flickr API
     expect(buildFlickrPhotoNode(badPhoto)).toBeInstanceOf(Error);
   });
 });

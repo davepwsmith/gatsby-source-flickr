@@ -27,6 +27,24 @@
         },
         "runtimeArgs": ["--nolazy"],
         "console": "integratedTerminal"
-      }
+      },
+      {
+      "name": "Jest single run all tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceRoot}/node_modules/jest/bin/jest.js",
+      "cwd": "${workspaceRoot}/plugin",
+      "env": { "CI": "true" },
+      "args": [
+        "-c",
+        "./jestconfig.json",
+        "--verbose",
+        "-i",
+        "--no-cache",
+        "--testTimeout=3600000"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
     ]
   }

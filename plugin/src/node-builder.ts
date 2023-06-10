@@ -222,7 +222,7 @@ export const buildFlickrPhotoNode = (
     if (photo._id && photo.owner && photo.title) {
       return photo;
     } else {
-      throw Error("Bad photo data input");
+      throw Error(`Bad photo data input: ${JSON.stringify(flickrPhoto)}`);
     }
   } catch (error) {
     return error;
